@@ -1,0 +1,27 @@
+
+((sx-x)+(sy-fx)*fdx)/sqrt((sx-x)^2+(sy-fx)^2+sz^2)+((cx-x)+(cy-fx)*fdx)/sqrt((cx-x)^2+(cy-fx)^2+cz^2) = 0
+
+
+fdx
+ = 
+-(
+	(sx-x)/sqrt((sx-x)^2+(sy-p.y)^2+sz^2)
+	+(cx-x)/sqrt((cx-x)^2+(cy-p.y)^2+cz^2)
+)/(
+	+(sy-p.y)/sqrt((sx-x)^2+(sy-p.y)^2+sz^2)
+	+(cy-p.y)/sqrt((cx-x)^2+(cy-p.y)^2+cz^2)
+)
+
+
+
+-((sx-x)/sqrt((sx-x)^2+(sy-py)^2+sz^2)+(cx-x)/sqrt((cx-x)^2+(cy-py)^2+cz^2))/((sy-py)/sqrt((sx-x)^2+(sy-py)^2+sz^2)+(cy-py)/sqrt((cx-x)^2+(cy-py)^2+cz^2))
+
+
+für sonne >> camera
+
+-(cx-x)*sqrt((sx-x)^2+(sy-py)^2+sz^2)/((sy-py)*sqrt((cx-x)^2+(cy-py)^2+cz^2))
+
+-(cx-px)*sqrt((sx-px)^2+(sy-py)^2+sz^2)/((sy-py)*sqrt((cx-px)^2+(cy-py)^2+cz^2))
+
+a1*wurzel(a1^2+20000)/(100*wurzel(a1^2+1))
+

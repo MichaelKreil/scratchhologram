@@ -1,0 +1,184 @@
+<html>
+	<head>
+		<script type="text/javascript" src="data.js"></script>
+		<script type="text/javascript">
+
+			var vec = {
+				scale: function(v, s) {
+					return {x:v.x*s, y:v.y*s, z:v.z*s}
+				}
+			}
+
+			var config = {
+				width:  512,
+				height: 512
+			}
+			var camera = data.cam;
+
+			var canvas, ctx;
+			function init() {
+				data.dots.forEach(function (dot) {
+					for (var i = 0; i < dot.curve.length; i++) {
+						var i0 = Math.max(i-1, 0);
+						var i1 = Math.min(i+1, dot.curve.length-1);
+						var dy = dot.curve[i1].y - dot.curve[i0].y;
+						var dx = dot.curve[i1].x - dot.curve[i0].x;
+						dot.curve[i].d = dy/dx;
+					}
+				})
+
+				canvas = document.getElementsByTagName('canvas')[0];
+				canvas.width  = config.width;
+				canvas.height = config.height;
+				ctx = canvas.getContext('2d');
+
+				canvas.addEventListener('mousemove', function (event) {
+					camera.x = (event.clientX - config.width/2 )*0.5;
+					camera.y = (event.clientY - config.height/2)*0.5;
+
+					draw();
+				})
+
+				draw();
+				//exportSVG();
+			}
+
+			function draw() {
+				ctx.clearRect(0,0,config.width, config.height);
+				var steps = 50;
+
+				
+				data.dots.forEach(function (dot) {
+					ctx.beginPath();
+					dot.curve.forEach(function (point, index) {
+						var x = config.width/2  + point.x;
+						var y = config.height/2 - point.y;
+						if (index == 0) {
+							ctx.moveTo(x, y)
+						} else {
+							ctx.lineTo(x, y)
+						}
+					})
+
+					ctx.strokeStyle = 'rgba(96,96,96,0.3)';
+					ctx.stroke();
+				})
+				
+
+				data.dots.forEach(function (dot, index) {
+					//if (index > 0) return;
+					var point = getHighlight(dot, 0);
+					if (!point) return;
+
+					ctx.beginPath();	
+					var x = config.width/2  + point.x;
+					var y = config.height/2 - point.y;
+					ctx.arc(x, y, 0.5, 0, 2*Math.PI);
+					ctx.fillStyle = '#fff';
+					ctx.fill();
+				})
+			}
+
+			function exportSVG() {
+				var svg = data.map(function (dot) {
+					return dot.svg();
+				});
+				svg.unshift('<svg version="1.1" baseProfile="basic" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="512px" height="512px" viewBox="0 0 512 512" xml:space="preserve">');
+				svg.unshift('<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1 Basic//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11-basic.dtd">');
+				svg.unshift('<?xml version="1.0" encoding="utf-8"?>');
+				svg.push('</svg>');
+				console.log(svg.join('\n'));
+			}
+
+			function getCurve(dot) {
+				var p = dot.point;
+				var r = -1*p.z;
+				var x0 = p.x;
+				var y0 = p.y-r;
+				return {
+					f:function (x) {
+						return sqrt(sqr(r)-sqr(x-x0))+y0;
+					},
+					fd:function (x) {
+						return -2*(x-x0)/sqrt(sqr(r)-sqr(x-x0));
+					},
+					svg: function () {
+						return '<circle stroke="#000000" stroke-width="0.1" fill="none" cx="'+x0+'" cy="'+(config.height-y0)+'" r="'+r+'" />'
+					}
+				}
+			}
+
+			function getHighlight(dot) {
+				var curve = dot.curve;
+				var s = data.sun;
+				var c = camera;
+
+				function interpolate(index) {
+					var i = Math.floor(index);
+					var a = index - i;
+					return {
+						x: curve[i].x*(1-a) + a*curve[i+1].x,
+						y: curve[i].y*(1-a) + a*curve[i+1].y,
+						d: curve[i].d*(1-a) + a*curve[i+1].d
+					}
+				}
+
+				function getError(i) {
+					var p = interpolate(i);
+					return ((s.x-p.x)+(s.y-p.y)*p.d)/sqrt(sqr(s.x-p.x)+sqr(s.y-p.y)+sqr(s.z))+((c.x-p.x)+(c.y-p.y)*p.d)/sqrt(sqr(c.x-p.x)+sqr(c.y-p.y)+sqr(c.z));
+				}
+
+				var i0 = 0;
+				var i1 = curve.length-1.01;
+				var e0 = getError(i0);
+				var e1 = getError(i1);
+				var f = 1;
+				if (e0 < e1) f = -1;
+
+				if (e0 < 0) {
+					//console.log(c, s);
+					//console.log(dot);
+					//for (var i = i0; i < i1; i++) console.log(getError(i));
+				}
+
+				for (var j = 0; j < 16; j++) {
+					var i = (i0+i1)/2;
+					var e = f*getError(i);
+					if (e > 0) {
+						i0 = i;
+					} else {
+						i1 = i;
+					}
+				}
+				if (Math.abs(e) > 0.01) return null;
+
+				var i = (i0+i1)/2;
+
+				var p = interpolate(i);
+
+				return {x:p.x, y:p.y};
+			}
+
+			function sqr(x) {
+				return x*x;
+			}
+
+			function sqrt(x) {
+				return Math.sqrt(x);
+			}
+		</script>
+		<style type="text/css">
+			html, body {
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				padding: 0;
+				background: #000;
+			}
+		</style>
+	</head>
+	<body onload="init()">
+		<canvas width="512" height="512">
+		</canvas>
+	</body>
+</html>
