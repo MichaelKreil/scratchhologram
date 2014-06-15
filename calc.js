@@ -16,5 +16,6 @@ points.setCam({ x:0, y:    0, z:  500 });
 points.calcCurves();
 
 points.saveJS('./web/data.js');
+points.saveSVG('./cube.svg');
 
 
