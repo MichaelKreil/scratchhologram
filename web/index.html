@@ -59,7 +59,7 @@
 						}
 					})
 
-					ctx.strokeStyle = 'rgba(48,48,48,1.0)';
+					ctx.strokeStyle = 'rgba(32,32,32,1.0)';
 					ctx.stroke();
 				})
 				
@@ -80,16 +80,19 @@
 
 			function getHighlight(dot) {
 				var curve = dot.curve;
+				if (curve.length <= 2) return null;
+
 				var s = data.sun;
 				var c = camera;
 
 				function interpolate(index) {
-					var i = Math.floor(index);
-					var a = index - i;
+					var i1 = Math.floor(index);
+					var i2 = Math.min(i1+1, curve.length-1);
+					var a = index - i1;
 					return {
-						x: curve[i].x*(1-a) + a*curve[i+1].x,
-						y: curve[i].y*(1-a) + a*curve[i+1].y,
-						d: curve[i].d*(1-a) + a*curve[i+1].d
+						x: curve[i1].x*(1-a) + a*curve[i2].x,
+						y: curve[i1].y*(1-a) + a*curve[i2].y,
+						d: curve[i1].d*(1-a) + a*curve[i2].d
 					}
 				}
 
@@ -99,7 +102,7 @@
 				}
 
 				var i0 = 0;
-				var i1 = curve.length-1.01;
+				var i1 = curve.length-1;
 				var e0 = getError(i0);
 				var e1 = getError(i1);
 				var f = 1;
